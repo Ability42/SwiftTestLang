@@ -261,6 +261,253 @@ for item in breakfastList {
     print(item.description)
 }
 
+//: Failable Initializers
+
+class Animal {
+    var species: String
+    
+    init?(species: String) {
+        if species.isEmpty { return nil }
+        self.species = species
+    }
+}
+
+let someAnimal = Animal(species: "Giraffe")
+
+if let giraffe = someAnimal {
+    print(giraffe.species)
+}
+
+let anonymusCreature = Animal(species: "")
+
+if anonymusCreature == nil {
+    print("The anonymus creature coudn't be initialized")
+}
+
+//: Failable Initializers for Enumerations
+
+
+enum TemperatureUnit {
+    case kelvin, celsius, fahrenheit
+    init?(symbol: Character) {
+        switch symbol {
+        case "K":
+            self = .kelvin
+        case "C":
+            self = .celsius
+        case "F":
+            self = .fahrenheit
+        default:
+            return nil
+        }
+    }
+}
+
+let fahrenheitUnit = TemperatureUnit(symbol: "C")
+if fahrenheitUnit != nil {
+    print("This is a defined temperature unit, so initialization succeeded.")
+}
+
+let unknownUnit = TemperatureUnit(symbol: "X")
+if unknownUnit == nil {
+    print("This is not a defined temperature unit, so initialization failed.")
+}
+
+//: Failable Initializers for Enumerations with Raw Values
+
+// You can rewrite the TemperatureUnit example from above to use raw values of type Character and to take advantage of the init?(rawValue:) initializer:
+
+enum TemperatureUnitWithRaw: Character {
+    case kelvin = "K", celsius = "C", fahrenheit = "F"
+}
+
+let fahrenheitUnit2 = TemperatureUnitWithRaw(rawValue: "C")
+
+if fahrenheitUnit2 != nil {
+    print("This is a defined temperature unit, so initialization succeeded.")
+}
+
+let unknownUnit2 = TemperatureUnitWithRaw(rawValue: "X")
+if unknownUnit2 == nil {
+    print("This is not a defined temperature unit, so initialization failed.")
+}
+// Prints "This is not a defined temperature unit, so initialization failed."
+
+class Product {
+    let name: String
+    init?(name: String) {
+        if name.isEmpty { return nil }
+        self.name = name
+    }
+}
+
+class CartItem: Product {
+    let quantity: Int
+    init?(name: String, quantity: Int) {
+        if quantity < 1 { return nil }
+        self.quantity = quantity
+        super.init(name: name)
+    }
+}
+
+if let twoSocks = CartItem(name: "sock", quantity: 2) {
+    print("Item: \(twoSocks.name), quantity: \(twoSocks.quantity)")
+}
+
+if let zeroShirts = CartItem(name: "shirt", quantity: 0) {
+    print("Item: \(zeroShirts.name), quantity: \(zeroShirts.quantity)")
+} else {
+    print("Unable to initialize zero shirts")
+}
+
+
+//: Overriding a Failable Initializer
+
+class Document {
+    var name: String?
+    
+    init() {}
+    
+    init?(name: String) {
+        if name.isEmpty {
+            return nil
+        }
+        self.name = name
+    }
+}
+
+class AutomaticalyNamedDocument: Document {
+    override init() {
+        super.init()
+        self.name = "[Untitled]"
+    }
+    
+    override init(name: String) {
+        super.init()
+        if name.isEmpty {
+            self.name = "[Untitled]"
+        } else {
+            self.name = name
+        }
+    }
+}
+
+class UntitledDocument: Document {
+    override init() {
+        super.init(name: "[Untitled]")!
+    }
+}
+
+let someUntitledDocument = UntitledDocument()
+print(someUntitledDocument.name!)
+
+//: The init! Failable Initializer
+
+
+class SomeClass {
+    required init() {
+        // some initialization code goes here
+    }
+}
+
+class SomeSubclass: SomeClass {
+    required init() {
+        // overriding SomeClass initialization method
+    }
+}
+
+//: Setting a Default Property Value with a Closure or Function
+
+struct Chessboard {
+    let boardColors: [Bool] = {
+        var temporaryBoard = [Bool]()
+        var isBlack = false
+        for i in 1...8 {
+            for j in 1...8 {
+                temporaryBoard.append(isBlack)
+                isBlack = !isBlack
+            }
+            isBlack = !isBlack
+        }
+        return temporaryBoard
+    }()
+    func squareIsBlackAt(row: Int, column: Int) -> Bool {
+        return boardColors[(row * 8) + column]
+    }
+}
+
+let board = Chessboard()
+print(board.squareIsBlackAt(row: 4, column: 5))
+
+
+class Foo {
+    
+    var someInt = 4
+    static var someStatucInt = 4
+    
+    func someFunc() {
+        print(self.someInt)
+    }
+    class func someStaticFunc() {
+        // ...
+    }
+    
+    func test() {
+        print("Test")
+    }
+    
+}
+
+Foo.someStatucInt
+//: deinitialization
+
+class Bank {
+    static var coinsInBank = 10000
+    
+    static func distirbute(coins numberOfCoinsRequested: Int) -> Int {
+        let numberOfCoinsToVend = min(numberOfCoinsRequested, coinsInBank)
+        coinsInBank -= numberOfCoinsToVend
+        return numberOfCoinsToVend
+    }
+    
+    static func recieve(coins: Int) {
+        coinsInBank += coins
+    }
+}
+
+class Player {
+    var coinsInPurse: Int
+    
+    init(coins: Int) {
+        coinsInPurse = Bank.distirbute(coins: coins)
+    }
+    
+    func win(coins: Int) {
+        coinsInPurse += Bank.distirbute(coins: coins)
+    }
+    
+    deinit {
+        Bank.recieve(coins: coinsInPurse)
+    }
+}
+
+
+var playerOne: Player? = Player(coins: 42)
+print("A player joined to the game with \(playerOne!.coinsInPurse) coins")
+print("There are \(Bank.coinsInBank) coins in the bank")
+
+
+playerOne!.win(coins: 1000)
+print("A player now has \(playerOne!.coinsInPurse) coins")
+print("There are \(Bank.coinsInBank) coins in the bank")
+
+playerOne = nil
+
+print("A player now has \(playerOne?.coinsInPurse) coins")
+print("There are \(Bank.coinsInBank) coins in the bank")
+
+
+
 
 
 
